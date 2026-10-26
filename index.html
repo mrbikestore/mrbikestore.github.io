@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="es" data-mode="client">
+<html lang="es" data-mode="admin">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MRbikestore</title>
+<title>MRbikestore · Panel</title>
 <meta name="description" content="Accesorios y Respuestos de bici">
 <meta property="og:title" content="MRbikestore">
 <meta property="og:description" content="Accesorios y Respuestos de bici">
@@ -12,6 +12,7 @@
 <link rel="icon" href="logo.jpg">
 <link rel="apple-touch-icon" href="logo.jpg">
 <meta name="theme-color" content="#14213D">
+<meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gabarito:wght@600;800&family=Figtree:wght@400;500;600;700&display=swap">
 <style>body{margin:0;padding:0}img{max-width:100%}
 /* Layout: shop window. Store name up top, filter row, product grid with shelf-label prices, cart bar pinned to the bottom. */
@@ -320,12 +321,39 @@ async function connect(token) {
   GH.token = token;
   try { const u = await fetch('https://api.github.com/user', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' }); if (u.ok) GH.login = (await u.json()).login || ''; } catch (e) {}
 }
+/* ---------- Acceso con contraseña: la clave de GitHub viaja cifrada (AES-GCM + PBKDF2) en acceso.json ---------- */
+const ITER = 600000;
+const b64e = buf => { let s = ''; for (const b of new Uint8Array(buf)) s += String.fromCharCode(b); return btoa(s); };
+const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriveKey(pass, salt, iter) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function sealToken(token, pass) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pass, salt, ITER);
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(token));
+  return { v: 1, iter: ITER, salt: b64e(salt), iv: b64e(iv), ct: b64e(ct) };
+}
+async function openToken(box, pass) {
+  const key = await deriveKey(pass, b64d(box.salt), box.iter || ITER);
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(box.iv) }, key, b64d(box.ct));
+  return new TextDecoder().decode(pt);
+}
+async function fetchAccess() {
+  try { const r = await fetch('acceso.json?v=' + Date.now(), { cache: 'no-store' }); if (r.ok) { const j = await r.json(); if (j && j.ct) return j; } } catch (e) {}
+  try { const r = await fetch(API + '/contents/acceso.json?ref=' + BRANCH, { cache: 'no-store', headers: { Accept: 'application/vnd.github.raw+json' } }); if (r.ok) { const j = await r.json(); if (j && j.ct) return j; } } catch (e) {}
+  return null;
+}
+const savedToken = () => ls.get('token') || ss.get('token');
+const forgetToken = () => { ls.set('token', null); ss.set('token', null); GH.token = ''; };
 async function adminBoot() {
   try { GH.seed = JSON.parse($('#seed')?.textContent || 'null'); } catch (e) { GH.seed = null; }
-  const token = ls.get('token');
-  if (!token) { UI.loading = false; renderLogin(); return; }
+  const token = savedToken();
+  if (!token) { GH.access = await fetchAccess(); UI.loading = false; renderLogin(); return; }
   try { await connect(token); }
-  catch (e) { if (e.status === 401 || e.status === 403 || e.status === 404) { ls.set('token', null); renderLogin(e.status === 401 ? 'La clave guardada venció o fue borrada. Creá una nueva.' : e.message); return; } renderLogin(e.message); return; }
+  catch (e) { if (e.status === 401 || e.status === 403 || e.status === 404) { forgetToken(); GH.access = await fetchAccess(); renderLogin(e.status === 401 ? 'La sesión guardada venció. Volvé a entrar.' : e.message); return; } renderLogin(e.message); return; }
+  fetchAccess().then(a => { GH.access = a; });
   await reloadFromGitHub(true);
 }
 async function reloadFromGitHub(useDraft) {
@@ -409,6 +437,7 @@ function shell() {
 }
 function render() { renderOwner(); renderHero(); renderCats(); renderGrid(); renderCartBar(); renderSheet(); document.title = (D.tienda.nombre || 'Catálogo') + (MODE === 'admin' ? ' · Panel' : ''); }
 function renderLogin(err) {
+  if (GH.access && !UI.tokenMode) { renderPassLogin(err); return; }
   $('#root').innerHTML = `<div class="wrap"><div class="login">
     <h1>Panel de MRbikestore</h1>
     <p class="hint">Para cargar y publicar productos, conectá este navegador con GitHub una sola vez.</p>
@@ -424,14 +453,42 @@ function renderLogin(err) {
       <button class="btn primary big">Conectar</button>
     </form>
     <p class="hint">La clave queda guardada solo en este navegador. Si perdés el dispositivo, borrala en GitHub → Settings → Personal access tokens.</p>
+    ${GH.access ? '<button class="btn ghost" data-act="pass-mode">Entrar con contraseña</button>' : ''}
     <a class="btn ghost" href="./">Ver la página de clientes</a>
   </div></div>`;
   $('#lg').addEventListener('submit', async ev => {
     ev.preventDefault();
     const btn = ev.target.querySelector('button'); const t = $('#lg-token').value.trim();
     btn.disabled = true; btn.textContent = 'Conectando…';
-    try { await connect(t); ls.set('token', t); shell(); await reloadFromGitHub(true); }
+    try { await connect(t); ls.set('token', t); UI.tokenMode = false; shell(); await reloadFromGitHub(true); }
     catch (e) { renderLogin(e.status === 401 ? 'GitHub no reconoce esa clave. Copiala de nuevo, entera.' : e.status === 404 ? 'Esa clave no tiene acceso al repositorio mrbikestore.github.io. Al crearla, elegí "mrbikestore" como Resource owner y ese repositorio.' : e.message); }
+  });
+}
+function renderPassLogin(err) {
+  $('#root').innerHTML = `<div class="wrap"><div class="login">
+    <img src="logo.jpg" alt="" style="width:140px;height:auto;align-self:center;border-radius:12px" onerror="this.remove()">
+    <h1 style="text-align:center">Panel de MRbikestore</h1>
+    <form id="pw" style="display:flex;flex-direction:column;gap:10px">
+      <input id="pw-pass" type="password" autocomplete="current-password" placeholder="Contraseña" required aria-label="Contraseña" autofocus>
+      <label class="chk"><input type="checkbox" id="pw-rem"> Recordar en este dispositivo</label>
+      ${err ? `<p class="err">${esc(err)}</p>` : ''}
+      <button class="btn primary big">Entrar</button>
+    </form>
+    <p class="hint">En una computadora o celular compartido, no marques “Recordar”: la sesión se cierra al cerrar el navegador.</p>
+    <button class="btn ghost" data-act="token-mode">Entrar con clave de GitHub</button>
+    <a class="btn ghost" href="./">Ver la página de clientes</a>
+  </div></div>`;
+  $('#pw').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const btn = ev.target.querySelector('button'); const pass = $('#pw-pass').value; const remember = $('#pw-rem').checked;
+    btn.disabled = true; btn.textContent = 'Verificando…';
+    let token;
+    try { token = await openToken(GH.access, pass); }
+    catch (e) { await new Promise(r => setTimeout(r, 1200)); renderPassLogin('Contraseña incorrecta.'); return; }
+    try { await connect(token); }
+    catch (e) { renderPassLogin(e.status === 401 ? 'La contraseña es correcta, pero la clave de GitHub guardada venció. Entrá con una clave nueva y volvé a configurar la contraseña.' : e.message); return; }
+    (remember ? ls : ss).set('token', token);
+    shell(); await reloadFromGitHub(true);
   });
 }
 function renderOwner() {
@@ -446,6 +503,7 @@ function renderOwner() {
     <button class="btn" data-act="stock-import">Stock desde Mostrador</button>
     <button class="btn" data-act="as-client">Ver como cliente</button>
     <button class="btn" data-act="new">+ Producto</button>
+    <button class="btn" data-act="access">Contraseña</button>
     <button class="btn" data-act="logout">Salir</button>
     <button class="btn solid" data-act="publish" ${UI.dirty && !UI.publishing ? '' : 'disabled'}>${UI.publishing ? 'Publicando…' : 'Publicar'}</button></div>`;
 }
@@ -604,6 +662,35 @@ const SHEETS = {
       <button class="btn primary big" data-act="reload-discard">Ver lo publicado (descarta mis cambios)</button>
       <button class="btn big" data-act="close">Seguir editando</button>
       <p class="hint">Si tus cambios eran pocos, conviene ver lo publicado y volver a hacerlos encima.</p>`;
+  },
+  access() {
+    return `${head('Acceso con contraseña')}
+      <p class="hint">${GH.access ? 'Ya hay una contraseña configurada. Acá podés cambiarla.' : 'Configurá una contraseña para entrar al panel desde cualquier dispositivo sin pegar la clave de GitHub.'}</p>
+      <div class="notice">Mínimo 12 caracteres y que no la uses en otro lado. Quien la sepa puede cambiar precios y el alias de cobro. Una frase de 3 o 4 palabras sueltas es fácil de recordar y difícil de adivinar.</div>
+      <form id="ac" class="formgrid">
+        <label class="f full">Contraseña nueva<input id="ac-1" type="password" autocomplete="new-password" required></label>
+        <label class="f full">Repetila<input id="ac-2" type="password" autocomplete="new-password" required></label>
+        <p class="err full" id="ac-err"></p>
+        <button class="btn primary big full">Guardar contraseña</button>
+      </form>
+      ${GH.access ? '<button class="btn ghost danger" data-act="access-del">Quitar el acceso por contraseña</button>' : ''}
+      <p class="hint">Si cambiás la contraseña, la anterior deja de funcionar en 1 o 2 minutos. Los dispositivos que ya entraron siguen conectados hasta que toquen “Salir”.</p>`;
+  },
+  accessBind() {
+    $('#ac').addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const a = $('#ac-1').value, b = $('#ac-2').value, err = $('#ac-err');
+      if (a.length < 12) { err.textContent = 'Tiene que tener al menos 12 caracteres.'; return; }
+      if (new Set(a).size < 5) { err.textContent = 'Es demasiado fácil de adivinar. Usá caracteres más variados.'; return; }
+      if (a !== b) { err.textContent = 'Las dos contraseñas no coinciden.'; return; }
+      const btn = ev.target.querySelector('button'); btn.disabled = true; btn.textContent = 'Guardando…';
+      try {
+        const box = await sealToken(GH.token, a);
+        const cur = await gh('GET', `/contents/acceso.json?ref=${BRANCH}`, null, { allow404: true });
+        await gh('PUT', '/contents/acceso.json', { message: GH.access ? 'Cambio de contraseña del panel' : 'Acceso por contraseña al panel', content: btoa(JSON.stringify(box) + '\n'), branch: BRANCH, ...(cur ? { sha: cur.sha } : {}) });
+        GH.access = box; closeSheet(); toast('Contraseña guardada. Funciona en otros dispositivos en 1 o 2 minutos');
+      } catch (e) { console.error(e); err.textContent = e.message || 'No se pudo guardar.'; btn.disabled = false; btn.textContent = 'Guardar contraseña'; }
+    });
   },
   store() {
     const t = D.tienda;
@@ -823,7 +910,11 @@ document.addEventListener('click', async ev => {
     case 'publish': closeSheet(); await publish(el); break;
     case 'seed': if (GH.seed) { setData(GH.seed); markDirty(); toast('Catálogo traído. Revisalo y tocá “Publicar”'); } break;
     case 'reload-discard': closeSheet(); ls.set('draft', null); await reloadFromGitHub(false); break;
-    case 'logout': if (UI.dirty && !armed(el)) break; ls.set('token', null); GH.token = ''; UI.owner = false; renderLogin(); break;
+    case 'logout': if (UI.dirty && !armed(el)) break; forgetToken(); UI.owner = false; UI.tokenMode = false; renderLogin(); break;
+    case 'access': openSheet('access'); break;
+    case 'access-del': if (armed(el)) { try { const cur = await gh('GET', `/contents/acceso.json?ref=${BRANCH}`, null, { allow404: true }); if (cur) await gh('DELETE', '/contents/acceso.json', { message: 'Quitar acceso por contraseña', sha: cur.sha, branch: BRANCH }); GH.access = null; closeSheet(); toast('Acceso por contraseña quitado'); } catch (e) { toast(e.message); } } break;
+    case 'token-mode': UI.tokenMode = true; renderLogin(); break;
+    case 'pass-mode': UI.tokenMode = false; renderLogin(); break;
   }
 });
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && UI.sheet) closeSheet(); });
