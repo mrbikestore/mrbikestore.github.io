@@ -36,7 +36,7 @@
    "id": "pmvomkgbvmimm",
    "nombre": "Manubrio lunje",
    "descripcion": "Dorado o negro",
-   "categoria": "Accesoeios",
+   "categoria": "Accesorios",
    "precio": 40000,
    "stock": null,
    "codigo": "",
@@ -65,7 +65,7 @@
    "id": "pmvomm069z9ki",
    "nombre": "Shimano mt200 trasero",
    "descripcion": "Frenos shimano",
-   "categoria": "Acceosiros",
+   "categoria": "Accesorios",
    "precio": 65000,
    "stock": 4,
    "codigo": "0040",
@@ -74,5 +74,5 @@
    "foto": "img/pmvomm069z9ki-mvoqaivd.jpg"
   }
  ],
- "actualizado": "2026-10-26T04:00:11.785Z"
+ "actualizado": "2026-10-26T05:20:17.895Z"
 }
