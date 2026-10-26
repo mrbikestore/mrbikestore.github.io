@@ -1,0 +1,78 @@
+{
+ "tienda": {
+  "nombre": "MRbikestore",
+  "lema": "Accesorios y Respuestos de bici",
+  "whatsapp": "5493854438360",
+  "alias": "mari.mia5",
+  "cbu": "",
+  "titular": "María del valle Ledesma",
+  "banco": "",
+  "entrega": "San Martín casi entre Ríos"
+ },
+ "productos": [
+  {
+   "id": "pmvomapine03b",
+   "nombre": "Stem",
+   "descripcion": "Stem",
+   "categoria": "Accesorios",
+   "precio": 40000,
+   "stock": 10,
+   "codigo": "0010",
+   "visible": true,
+   "foto": "img/pmvomapine03b-mvoqaivd.jpg"
+  },
+  {
+   "id": "pmvomhnr43lg3",
+   "nombre": "Pedales (plástico $35.000)",
+   "descripcion": "Pedales varios aluminio y plástico",
+   "categoria": "Accesorios",
+   "precio": 45000,
+   "stock": 10,
+   "codigo": "0020",
+   "visible": true,
+   "foto": "img/pmvomhnr43lg3-mvoqaivd.jpg"
+  },
+  {
+   "id": "pmvomkgbvmimm",
+   "nombre": "Manubrio lunje",
+   "descripcion": "Dorado o negro",
+   "categoria": "Accesoeios",
+   "precio": 40000,
+   "stock": null,
+   "codigo": "",
+   "colores": [
+    {
+     "id": "cmvomjzhyhqc",
+     "nombre": "Dorado",
+     "hex": "#c9a227",
+     "stock": 2,
+     "codigo": "",
+     "foto": ""
+    },
+    {
+     "id": "cmvomk8zxs8w",
+     "nombre": "Negro",
+     "hex": "#1a1a1a",
+     "stock": 2,
+     "codigo": "",
+     "foto": ""
+    }
+   ],
+   "visible": true,
+   "foto": "img/pmvomkgbvmimm-mvoqaivd.jpg"
+  },
+  {
+   "id": "pmvomm069z9ki",
+   "nombre": "Shimano mt200 trasero",
+   "descripcion": "Frenos shimano",
+   "categoria": "Acceosiros",
+   "precio": 65000,
+   "stock": 4,
+   "codigo": "0040",
+   "colores": [],
+   "visible": true,
+   "foto": "img/pmvomm069z9ki-mvoqaivd.jpg"
+  }
+ ],
+ "actualizado": "2026-10-26T04:00:11.785Z"
+}
