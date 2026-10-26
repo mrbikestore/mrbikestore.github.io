@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="es" data-mode="admin">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MRbikestore · Panel</title>
+<meta name="description" content="Accesorios y Respuestos de bici">
+<meta property="og:title" content="MRbikestore">
+<meta property="og:description" content="Accesorios y Respuestos de bici">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://mrbikestore.github.io/logo.jpg">
+<link rel="icon" href="logo.jpg">
+<link rel="apple-touch-icon" href="logo.jpg">
+<meta name="theme-color" content="#14213D">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gabarito:wght@600;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>body{margin:0;padding:0}img{max-width:100%}
+/* Layout: shop window. Store name up top, filter row, product grid with shelf-label prices, cart bar pinned to the bottom. */
+:root {
+  --bg: #F3F4F7; --surface: #FFFFFF; --sunk: #E8EBF1; --ink: #14213D; --muted: #586379; --line: #DADFE8;
+  --btn: #14213D; --btn-ink: #FFFFFF; --tag: #FFD23F; --tag-ink: #14213D;
+  --ok: #1D7A4C; --ok-soft: #DCF1E5; --warn: #985A00; --warn-soft: #FCEFD4; --bad: #B3362E; --bad-soft: #FAE1DF;
+  --band: #14213D; --band-ink: #F3F4F7;
+  --f-display: "Gabarito", "Figtree", system-ui, sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0C111D; --surface: #141B2C; --sunk: #1C2438; --ink: #E7EBF4; --muted: #97A1B7; --line: #252F47;
+  --btn: #FFD23F; --btn-ink: #14213D; --ok: #55C68E; --ok-soft: #12331F; --warn: #E8B154; --warn-soft: #3A2A0E; --bad: #F0807A; --bad-soft: #3C1916;
+  --band: #FFD23F; --band-ink: #14213D; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0C111D; --surface: #141B2C; --sunk: #1C2438; --ink: #E7EBF4; --muted: #97A1B7; --line: #252F47;
+  --btn: #FFD23F; --btn-ink: #14213D; --ok: #55C68E; --ok-soft: #12331F; --warn: #E8B154; --warn-soft: #3A2A0E; --bad: #F0807A; --bad-soft: #3C1916;
+  --band: #FFD23F; --band-ink: #14213D; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45; font-variant-numeric: tabular-nums; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+.ownerbar { background: var(--band); color: var(--band-ink); }
+.ownerbar .wrap { padding-block: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ownerbar .who { font-weight: 700; margin-right: auto; display: flex; flex-direction: column; line-height: 1.2; }
+.ownerbar .who small { font-weight: 500; opacity: .8; }
+.ownerbar .btn { background: transparent; color: var(--band-ink); border-color: currentColor; }
+.ownerbar .btn.solid { background: var(--band-ink); color: var(--band); }
+
+.hero { background: #010101; color: #fff; }
+.hero .wrap { align-items: center; text-align: center; }
+.hero .logo { width: min(300px, 74vw); height: auto; display: block; margin: -8px auto -4px; }
+.hero p { color: #cbbfe6 !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.hero .wrap { padding-block: 20px 18px; display: flex; flex-direction: column; gap: 6px; }
+.hero h1 { font-size: clamp(2rem, 6vw, 3.4rem); font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
+.hero p { margin: 0; color: var(--muted); max-width: 60ch; }
+
+.filters { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 4; background: var(--bg); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.filters .wrap { padding-block: 12px; display: flex; flex-direction: column; gap: 10px; }
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: .9rem; cursor: pointer; white-space: nowrap; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+input, select, textarea { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%; min-width: 0; }
+textarea { min-height: 70px; resize: vertical; }
+label.f { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; font-weight: 600; color: var(--muted); }
+label.chk { display: flex; gap: 8px; align-items: center; font-weight: 600; }
+label.chk input { width: auto; }
+
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 9px 16px; border-radius: 10px; font-weight: 700; cursor: pointer; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.btn:hover { filter: brightness(.97); }
+.btn.primary { background: var(--btn); color: var(--btn-ink); border-color: var(--btn); }
+.btn.primary:disabled { opacity: .45; cursor: not-allowed; }
+.btn.wa { background: #1FA855; color: #fff; border-color: #1FA855; }
+.btn.big { width: 100%; padding: 14px; font-size: 1.05rem; }
+.btn.sm { padding: 5px 10px; font-size: .85rem; }
+.btn.ghost { background: transparent; border-color: transparent; }
+.btn.danger { color: var(--bad); }
+.btn.armed { background: var(--bad); color: #fff; border-color: var(--bad); }
+
+main.wrap { padding-block: 8px 120px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+@media (max-width: 520px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.card.off { opacity: .55; }
+.ph { aspect-ratio: 1; max-width: 100%; background: var(--sunk); position: relative; border: 0; padding: 0; cursor: pointer; display: block; width: 100%; }
+.ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ph .ini { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--f-display); font-size: 3rem; font-weight: 800; color: var(--muted); }
+.ph .badge { position: absolute; left: 8px; top: 8px; }
+.body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.body .n { font-weight: 600; overflow-wrap: anywhere; line-height: 1.25; }
+.body .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; flex-wrap: wrap; }
+.tag { background: var(--tag); color: var(--tag-ink); font-family: var(--f-display); font-weight: 800; font-size: 1.15rem; padding: 2px 9px; border-radius: 4px; letter-spacing: -0.01em; box-shadow: inset 0 -2px 0 rgb(0 0 0 / .12); white-space: nowrap; }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .75rem; font-weight: 700; white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); } .pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); } .pill.neutral { background: var(--sunk); color: var(--muted); }
+.qty { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.qty button { border: 0; background: none; width: 32px; height: 32px; cursor: pointer; font-weight: 800; font-size: 1.05rem; }
+.qty button:disabled { opacity: .3; cursor: not-allowed; }
+.qty span { min-width: 22px; text-align: center; font-weight: 700; }
+.add { background: var(--btn); color: var(--btn-ink); border: 0; border-radius: 10px; width: 34px; height: 34px; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
+.add:disabled { opacity: .35; cursor: not-allowed; }
+
+.empty { text-align: center; padding: 56px 16px; color: var(--muted); display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.empty strong { color: var(--ink); font-family: var(--f-display); font-size: 1.3rem; }
+
+.cartbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: linear-gradient(to top, var(--bg) 70%, transparent); }
+.cartbar .btn { max-width: 560px; margin: 0 auto; display: flex; width: 100%; justify-content: space-between; padding: 14px 18px; font-size: 1.05rem; box-shadow: 0 8px 24px rgb(0 0 0 / .18); }
+
+.overlay { position: fixed; inset: 0; z-index: 20; background: rgb(8 12 22 / .5); display: flex; justify-content: center; align-items: flex-end; }
+@media (min-width: 700px) { .overlay { align-items: center; padding: 24px; } }
+.sheet { background: var(--surface); width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; border-radius: 18px 18px 0 0; padding: 20px max(18px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 14px; }
+@media (min-width: 700px) { .sheet { border-radius: 18px; } }
+.sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.x { border: 0; background: var(--sunk); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; flex: none; }
+.line { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.line .thumb { width: 52px; height: 52px; border-radius: 8px; overflow: hidden; background: var(--sunk); }
+.line .thumb img { width: 100%; height: 100%; object-fit: cover; }
+.line .n { font-weight: 600; overflow-wrap: anywhere; }
+.line .u { color: var(--muted); font-size: .85rem; }
+.line .r { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.total { display: flex; justify-content: space-between; align-items: baseline; }
+.total strong { font-family: var(--f-display); font-size: 1.8rem; font-weight: 800; }
+.hint { color: var(--muted); font-size: .88rem; margin: 0; }
+.label { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+.formgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.formgrid .full { grid-column: 1 / -1; }
+@media (max-width: 480px) { .formgrid { grid-template-columns: 1fr; } }
+
+.orderno { background: var(--tag); color: var(--tag-ink); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; }
+.orderno b { font-family: var(--f-display); font-size: 2rem; font-weight: 800; letter-spacing: .04em; }
+.steps { display: flex; flex-direction: column; gap: 14px; margin: 0; padding: 0; list-style: none; counter-reset: s; }
+.steps li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; counter-increment: s; }
+.steps li::before { content: counter(s); width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-weight: 800; font-size: .9rem; }
+.steps li > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.bank { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.bank div { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.bank div:last-child { border-bottom: 0; }
+.bank span { color: var(--muted); font-size: .85rem; }
+.bank code { font-family: ui-monospace, Menlo, monospace; font-weight: 700; overflow-wrap: anywhere; text-align: right; user-select: all; }
+
+.detail-img { width: 100%; max-width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; background: var(--sunk); }
+.photo-edit { display: flex; gap: 12px; align-items: center; }
+.photo-edit .ph { width: 96px; flex: none; border-radius: 10px; overflow: hidden; cursor: default; }
+.toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 600; z-index: 30; max-width: calc(100% - 32px); text-align: center; }
+.notice { border-radius: 12px; padding: 10px 14px; background: var(--warn-soft); color: var(--warn); font-weight: 500; }
+.dots { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; font-size: .75rem; color: var(--muted); font-weight: 600; }
+.dot { width: 14px; height: 14px; border-radius: 50%; background: var(--c, #888); box-shadow: inset 0 0 0 1px rgb(0 0 0 / .2); flex: none; display: inline-block; }
+.dot.out { opacity: .3; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.sw { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px 5px 6px; font-weight: 600; font-size: .9rem; cursor: pointer; }
+.sw .dot { width: 22px; height: 22px; }
+.sw[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.sw:disabled { cursor: not-allowed; color: var(--muted); text-decoration: line-through; }
+.sw:disabled .dot { opacity: .35; }
+.colrow { display: grid; grid-template-columns: 44px minmax(0, 1fr) 86px 34px; gap: 8px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 12px; }
+.colrow input[type="color"] { width: 44px; height: 42px; padding: 3px; cursor: pointer; }
+.colrow .cod { grid-column: 1 / 3; }
+.colrow .cfoto { grid-column: 3 / 5; display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+.colrow .cph { width: 36px; height: 36px; border-radius: 8px; overflow: hidden; background: var(--sunk); flex: none; }
+.colrow .cph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.login { max-width: 520px; margin: 32px auto; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.login ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
+.login code { background: var(--sunk); padding: 1px 6px; border-radius: 6px; font-size: .9em; }
+.err { color: var(--bad); font-weight: 600; margin: 0; }
+.loading { text-align: center; padding: 56px 16px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { animation: rise .22s ease-out; } @keyframes rise { from { transform: translateY(24px); opacity: .4; } }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(() => {
+'use strict';
+/* ---------- Config ---------- */
+const MODE = document.documentElement.dataset.mode === 'admin' ? 'admin' : 'client';
+const OWNER = 'mrbikestore', REPO = 'mrbikestore.github.io', BRANCH = 'main';
+const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
+const RAW = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/`;
+const TOKEN_URL = 'https://github.com/settings/personal-access-tokens/new?name=Panel%20MRbikestore&description=Publicar%20el%20cat%C3%A1logo&target_name=mrbikestore&expires_in=366&contents=write';
+const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+const LOW = 3;
+
+/* ---------- Helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+const money = n => '$ ' + num(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const norm = s => String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+const store = (area, prefix) => ({
+  get(k) { try { return JSON.parse(area.getItem(prefix + k)); } catch (e) { return null; } },
+  set(k, v) { try { v == null ? area.removeItem(prefix + k) : area.setItem(prefix + k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+});
+const ss = (() => { try { return store(sessionStorage, 'cat:'); } catch (e) { return { get: () => null, set: () => false }; } })();
+const ls = (() => { try { return store(localStorage, 'mbs:'); } catch (e) { return { get: () => null, set: () => false }; } })();
+const imgSrc = f => !f ? '' : /^data:/.test(f) ? f : MODE === 'admin' ? RAW + f : f;
+const clone = o => JSON.parse(JSON.stringify(o));
+
+/* ---------- State ---------- */
+const blankStore = { nombre: '', lema: '', whatsapp: '', alias: '', cbu: '', titular: '', banco: '', entrega: '' };
+let D = { tienda: { ...blankStore }, productos: [], actualizado: null };
+const setData = d => { D = { tienda: { ...blankStore, ...(d?.tienda || {}) }, productos: Array.isArray(d?.productos) ? d.productos : [], actualizado: d?.actualizado || null }; };
+const UI = {
+  q: '', cat: '', owner: false, asClient: false, dirty: false, sheet: null, loading: true, loadError: false,
+  cart: ss.get('cart') || {}, order: ss.get('order') || null,
+  form: ss.get('form') || { nombre: '', telefono: '', entrega: 'retiro', direccion: '', nota: '' },
+};
+const GH = { token: '', login: '', dataSha: null, seed: null };
+
+const visible = () => D.productos.filter(p => p.visible !== false);
+const byId = id => D.productos.find(p => p.id === id);
+const unl = v => v == null || v === '';
+const cols = p => Array.isArray(p?.colores) ? p.colores : [];
+const hasCols = p => cols(p).length > 0;
+const cHas = c => unl(c.stock) || num(c.stock) > 0;
+const colorOf = (p, cid) => cols(p).find(c => c.id === cid);
+const hasStock = p => hasCols(p) ? cols(p).some(cHas) : (unl(p.stock) || num(p.stock) > 0);
+const maxQty = (p, c) => { const v = c ? c.stock : p.stock; return unl(v) ? 99 : Math.max(0, num(v)); };
+const totalStock = p => hasCols(p) ? (cols(p).some(c => unl(c.stock)) ? null : cols(p).reduce((a, c) => a + num(c.stock), 0)) : (unl(p.stock) ? null : num(p.stock));
+const keyOf = (pid, cid) => cid ? pid + '::' + cid : pid;
+const splitKey = k => { const i = k.indexOf('::'); return i < 0 ? [k, ''] : [k.slice(0, i), k.slice(i + 2)]; };
+const inCart = pid => Object.entries(UI.cart).reduce((a, [k, q]) => a + (splitKey(k)[0] === pid ? q : 0), 0);
+const hex = v => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? String(v) : '#888888';
+const COLMAP = { 'negro': '#1a1a1a', 'blanco': '#ffffff', 'gris': '#9a9a9a', 'gris claro': '#cfcfcf', 'gris oscuro': '#555555', 'rojo': '#d32f2f', 'bordo': '#7b1e2b', 'rosa': '#f48fb1', 'rosado': '#f48fb1', 'fucsia': '#d81b60', 'violeta': '#7e57c2', 'lila': '#b39ddb', 'azul': '#1e4fd8', 'azul marino': '#1b2a4a', 'celeste': '#7cc4f0', 'turquesa': '#1fb5ad', 'verde': '#2e9d4a', 'verde agua': '#7fd6c2', 'verde oliva': '#6b7a2e', 'verde militar': '#4b5320', 'amarillo': '#f7d038', 'mostaza': '#d4a017', 'naranja': '#f28c28', 'coral': '#ff7f6b', 'marron': '#7a4b2a', 'chocolate': '#5a3420', 'camel': '#c19a6b', 'beige': '#e3d3b5', 'crema': '#f3ead3', 'natural': '#eadfca', 'nude': '#e0b9a0', 'dorado': '#c9a227', 'plateado': '#c0c4c8', 'cobre': '#b87333', 'transparente': '#eef3f6' };
+const guessHex = name => { const n = norm(name); if (!n) return null; if (COLMAP[n]) return COLMAP[n]; const k = Object.keys(COLMAP).filter(k => n.startsWith(k + ' ')).sort((a, b) => b.length - a.length)[0]; return k ? COLMAP[k] : null; };
+const dot = c => `<span class="dot" style="--c:${hex(c.hex)}"></span>`;
+const dots = p => { const cs = cols(p); return `<span class="dots" aria-label="${cs.length} colores">${cs.slice(0, 7).map(c => `<span class="dot ${cHas(c) ? '' : 'out'}" style="--c:${hex(c.hex)}" title="${esc(c.nombre)}"></span>`).join('')}${cs.length > 7 ? `+${cs.length - 7}` : ''}</span>`; };
+const showOwner = () => UI.owner && !UI.asClient;
+const persist = () => { ss.set('cart', UI.cart); ss.set('order', UI.order); ss.set('form', UI.form); };
+
+function toast(msg) {
+  let t = $('#toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+  t.className = 'toast'; t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 3200);
+}
+function armed(btn) {
+  if (btn.classList.contains('armed')) return true;
+  const old = btn.textContent; btn.classList.add('armed'); btn.textContent = '¿Confirmar?';
+  setTimeout(() => { btn.classList.remove('armed'); btn.textContent = old; }, 3000);
+  return false;
+}
+async function copy(text, btn) {
+  try { await navigator.clipboard.writeText(text); toast('Copiado'); }
+  catch (e) {
+    const el = btn?.closest('div')?.querySelector('code');
+    if (el) { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+    toast('Seleccionado: mantené apretado para copiar');
+  }
+}
+const photo = p => p.foto ? `<img src="${esc(imgSrc(p.foto))}" alt="${esc(p.nombre)}" loading="lazy">` : `<span class="ini">${esc((p.nombre || '?').trim().charAt(0).toUpperCase())}</span>`;
+function stockPill(p, c) {
+  if (!(c ? cHas(c) : hasStock(p))) return '<span class="pill bad">Sin stock</span>';
+  const v = c ? (unl(c.stock) ? null : num(c.stock)) : totalStock(p);
+  if (v != null && v <= LOW) return '<span class="pill warn">Quedan pocas</span>';
+  return '';
+}
+const cartLines = () => Object.entries(UI.cart).map(([key, q]) => { const [id, cid] = splitKey(key); const p = byId(id); const c = p && cid ? colorOf(p, cid) : null; return { key, p, c, q, bad: !!cid && !c }; })
+  .filter(l => l.p && !l.bad && l.p.visible !== false && (l.c ? cHas(l.c) : (!hasCols(l.p) && hasStock(l.p))) && l.q > 0);
+const cartTotal = () => cartLines().reduce((a, l) => a + num(l.p.precio) * l.q, 0);
+const cartCount = () => cartLines().reduce((a, l) => a + l.q, 0);
+function setQty(key, q) {
+  const [id, cid] = splitKey(key); const p = byId(id); if (!p) return;
+  const c = cid ? colorOf(p, cid) : null; if (cid && !c) return;
+  q = Math.min(Math.max(0, q), maxQty(p, c));
+  if (q > 0) UI.cart[key] = q; else delete UI.cart[key];
+  persist(); renderGrid(); renderCartBar(); if (UI.sheet === 'cart') renderSheet();
+}
+function newOrderNo() {
+  const d = new Date(), A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const r = crypto.getRandomValues(new Uint32Array(4));
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}${pad(d.getMonth() + 1)}-${[...r].map(x => A[x % A.length]).join('')}`;
+}
+const normWa = v => {
+  let d = String(v || '').replace(/\D/g, ''); if (d.startsWith('00')) d = d.slice(2);
+  if (d.startsWith('549')) return d;
+  if (d.startsWith('54')) return '549' + d.slice(2).replace(/^0/, '');
+  if (d.startsWith('0')) d = d.slice(1);
+  return d.length === 10 ? '549' + d : d;
+};
+const waDigits = () => normWa(D.tienda.whatsapp);
+const payReady = () => !!(waDigits() && (D.tienda.alias || D.tienda.cbu));
+
+/* ---------- GitHub API (admin) ---------- */
+async function gh(method, path, body, { allow404 = false, token = GH.token } = {}) {
+  let r;
+  try {
+    r = await fetch(API + path, {
+      method, cache: 'no-store',
+      headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (e) { const err = new Error('Sin conexión con GitHub. Revisá internet y probá de nuevo.'); err.status = 0; throw err; }
+  if (r.status === 404 && allow404) return null;
+  if (!r.ok) {
+    const err = new Error('GitHub respondió ' + r.status); err.status = r.status;
+    try { err.body = await r.json(); err.message += ': ' + (err.body.message || ''); } catch (e) {}
+    throw err;
+  }
+  return r.status === 204 ? null : r.json();
+}
+const b64ToText = b => new TextDecoder().decode(Uint8Array.from(atob(String(b).replace(/\s/g, '')), ch => ch.charCodeAt(0)));
+async function loadRemote() {
+  const f = await gh('GET', `/contents/data.json?ref=${BRANCH}`, null, { allow404: true });
+  if (!f) { GH.dataSha = null; return null; }
+  GH.dataSha = f.sha;
+  return JSON.parse(b64ToText(f.content));
+}
+function saveDraft() {
+  if (!ls.set('draft', { base: GH.dataSha, data: D }) && !saveDraft.warned) { saveDraft.warned = true; toast('Hay demasiadas fotos nuevas para guardar el borrador. Publicá pronto.'); }
+}
+async function connect(token) {
+  const repo = await gh('GET', '', null, { token });
+  if (!repo?.permissions?.push) { const e = new Error('Esa clave no tiene permiso para escribir en el catálogo. Revisá que tenga "Contents: Read and write" sobre mrbikestore.github.io.'); e.status = 403; throw e; }
+  GH.token = token;
+  try { const u = await fetch('https://api.github.com/user', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' }); if (u.ok) GH.login = (await u.json()).login || ''; } catch (e) {}
+}
+/* ---------- Acceso con contraseña: la clave de GitHub viaja cifrada (AES-GCM + PBKDF2) en acceso.json ---------- */
+const ITER = 600000;
+const b64e = buf => { let s = ''; for (const b of new Uint8Array(buf)) s += String.fromCharCode(b); return btoa(s); };
+const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriveKey(pass, salt, iter) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function sealToken(token, pass) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pass, salt, ITER);
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(token));
+  return { v: 1, iter: ITER, salt: b64e(salt), iv: b64e(iv), ct: b64e(ct) };
+}
+async function openToken(box, pass) {
+  const key = await deriveKey(pass, b64d(box.salt), box.iter || ITER);
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(box.iv) }, key, b64d(box.ct));
+  return new TextDecoder().decode(pt);
+}
+async function fetchAccess() {
+  try { const r = await fetch('acceso.json?v=' + Date.now(), { cache: 'no-store' }); if (r.ok) { const j = await r.json(); if (j && j.ct) return j; } } catch (e) {}
+  try { const r = await fetch(API + '/contents/acceso.json?ref=' + BRANCH, { cache: 'no-store', headers: { Accept: 'application/vnd.github.raw+json' } }); if (r.ok) { const j = await r.json(); if (j && j.ct) return j; } } catch (e) {}
+  return null;
+}
+const savedToken = () => ls.get('token') || ss.get('token');
+const forgetToken = () => { ls.set('token', null); ss.set('token', null); GH.token = ''; };
+async function adminBoot() {
+  try { GH.seed = JSON.parse($('#seed')?.textContent || 'null'); } catch (e) { GH.seed = null; }
+  const token = savedToken();
+  if (!token) { GH.access = await fetchAccess(); UI.loading = false; renderLogin(); return; }
+  try { await connect(token); }
+  catch (e) { if (e.status === 401 || e.status === 403 || e.status === 404) { forgetToken(); GH.access = await fetchAccess(); renderLogin(e.status === 401 ? 'La sesión guardada venció. Volvé a entrar.' : e.message); return; } renderLogin(e.message); return; }
+  fetchAccess().then(a => { GH.access = a; });
+  await reloadFromGitHub(true);
+}
+async function reloadFromGitHub(useDraft) {
+  UI.loading = true; UI.owner = true; render();
+  try {
+    const remote = await loadRemote();
+    setData(remote || {});
+    UI.dirty = false;
+    const draft = useDraft ? ls.get('draft') : null;
+    if (draft && draft.data) {
+      if ((draft.base || null) === GH.dataSha && JSON.stringify(draft.data) !== JSON.stringify(D)) { setData(draft.data); UI.dirty = true; toast('Recuperé tus cambios sin publicar'); }
+      else if ((draft.base || null) !== GH.dataSha) { ls.set('draft', null); }
+    }
+    if (!useDraft) ls.set('draft', null);
+    UI.loading = false; UI.loadError = false;
+  } catch (e) {
+    console.error(e); UI.loading = false; UI.loadError = e.message;
+  }
+  render();
+}
+async function publish(btn) {
+  if (!GH.token || UI.publishing) return;
+  UI.publishing = true;
+  if (btn) { btn.disabled = true; btn.textContent = 'Publicando…'; }
+  try {
+    const ref = await gh('GET', `/git/ref/heads/${BRANCH}`);
+    const head = ref.object.sha;
+    const commit = await gh('GET', `/git/commits/${head}`);
+    const cur = await gh('GET', `/contents/data.json?ref=${head}`, null, { allow404: true });
+    if ((cur ? cur.sha : null) !== GH.dataSha) { const e = new Error('conflict'); e.code = 'conflict'; throw e; }
+    const data = clone(D); data.actualizado = new Date().toISOString();
+    const tree = [], used = new Set();
+    const stamp = Date.now().toString(36);
+    const putImg = async (o, name) => {
+      if (o.foto && /^data:image\//.test(o.foto)) {
+        const path = `img/${name}-${stamp}.jpg`;
+        const blob = await gh('POST', '/git/blobs', { content: o.foto.split(',')[1], encoding: 'base64' });
+        tree.push({ path, mode: '100644', type: 'blob', sha: blob.sha });
+        o.foto = path;
+      }
+      if (o.foto) used.add(o.foto);
+    };
+    for (const p of data.productos) {
+      await putImg(p, p.id);
+      for (const c of cols(p)) await putImg(c, p.id + '-' + c.id);
+    }
+    const full = await gh('GET', `/git/trees/${commit.tree.sha}?recursive=1`);
+    for (const t of full.tree || []) if (t.type === 'blob' && t.path.startsWith('img/') && !used.has(t.path)) tree.push({ path: t.path, mode: '100644', type: 'blob', sha: null });
+    tree.push({ path: 'data.json', mode: '100644', type: 'blob', content: JSON.stringify(data, null, 1) + '\n' });
+    const nt = await gh('POST', '/git/trees', { base_tree: commit.tree.sha, tree });
+    const nc = await gh('POST', '/git/commits', { message: `Catálogo actualizado${GH.login ? ' por ' + GH.login : ''}`, tree: nt.sha, parents: [head] });
+    try { await gh('PATCH', `/git/refs/heads/${BRANCH}`, { sha: nc.sha, force: false }); }
+    catch (e) { if (e.status === 422 || e.status === 409) { const c = new Error('conflict'); c.code = 'conflict'; throw c; } throw e; }
+    const after = await gh('GET', `/contents/data.json?ref=${nc.sha}`, null, { allow404: true });
+    GH.dataSha = after ? after.sha : null;
+    setData(data); UI.dirty = false; ls.set('draft', null);
+    toast('¡Publicado! Los clientes lo ven en 1 o 2 minutos');
+  } catch (e) {
+    console.error(e);
+    if (e.code === 'conflict') { saveDraft(); openSheet('conflict'); }
+    else if (e.status === 401) { toast('La clave venció o fue borrada. Volvé a conectarte.'); }
+    else toast(e.message || 'No se pudo publicar. Probá de nuevo.');
+  } finally {
+    UI.publishing = false; render();
+  }
+}
+
+/* ---------- Shell & render ---------- */
+function shell() {
+  $('#root').innerHTML = `
+    <div class="ownerbar" id="ownerbar" hidden></div>
+    <header class="hero"><div class="wrap" id="hero"></div></header>
+    <div class="filters"><div class="wrap">
+      <input id="q" type="search" placeholder="Buscar productos…" autocomplete="off" aria-label="Buscar productos">
+      <div class="chips" id="cats"></div>
+    </div></div>
+    <main class="wrap"><div id="grid"></div></main>
+    <div class="cartbar" id="cartbar" hidden></div>
+    <div id="sheet-root"></div>`;
+  $('#q').addEventListener('input', e => { UI.q = e.target.value; renderGrid(); });
+}
+function render() { renderOwner(); renderHero(); renderCats(); renderGrid(); renderCartBar(); renderSheet(); document.title = (D.tienda.nombre || 'Catálogo') + (MODE === 'admin' ? ' · Panel' : ''); }
+function renderLogin(err) {
+  if (GH.access && !UI.tokenMode) { renderPassLogin(err); return; }
+  $('#root').innerHTML = `<div class="wrap"><div class="login">
+    <h1>Panel de MRbikestore</h1>
+    <p class="hint">Para cargar y publicar productos, conectá este navegador con GitHub una sola vez.</p>
+    <ol>
+      <li>Iniciá sesión en GitHub con una cuenta que sea miembro de la organización <strong>mrbikestore</strong>.</li>
+      <li><a class="btn" href="${TOKEN_URL}" target="_blank" rel="noopener">Crear clave en GitHub</a>
+        <p class="hint" style="margin-top:6px">Revisá: <em>Resource owner</em> = <code>mrbikestore</code> · <em>Repository access</em> = solo <code>mrbikestore.github.io</code> · <em>Permissions → Contents</em> = <code>Read and write</code>. Tocá <strong>Generate token</strong> y copiala.</p></li>
+      <li>Pegala acá:</li>
+    </ol>
+    <form id="lg" style="display:flex;flex-direction:column;gap:10px">
+      <input id="lg-token" type="password" autocomplete="off" placeholder="github_pat_…" required aria-label="Clave de GitHub">
+      ${err ? `<p class="err">${esc(err)}</p>` : ''}
+      <button class="btn primary big">Conectar</button>
+    </form>
+    <p class="hint">La clave queda guardada solo en este navegador. Si perdés el dispositivo, borrala en GitHub → Settings → Personal access tokens.</p>
+    ${GH.access ? '<button class="btn ghost" data-act="pass-mode">Entrar con contraseña</button>' : ''}
+    <a class="btn ghost" href="./">Ver la página de clientes</a>
+  </div></div>`;
+  $('#lg').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const btn = ev.target.querySelector('button'); const t = $('#lg-token').value.trim();
+    btn.disabled = true; btn.textContent = 'Conectando…';
+    try { await connect(t); ls.set('token', t); UI.tokenMode = false; shell(); await reloadFromGitHub(true); }
+    catch (e) { renderLogin(e.status === 401 ? 'GitHub no reconoce esa clave. Copiala de nuevo, entera.' : e.status === 404 ? 'Esa clave no tiene acceso al repositorio mrbikestore.github.io. Al crearla, elegí "mrbikestore" como Resource owner y ese repositorio.' : e.message); }
+  });
+}
+function renderPassLogin(err) {
+  $('#root').innerHTML = `<div class="wrap"><div class="login">
+    <img src="logo.jpg" alt="" style="width:140px;height:auto;align-self:center;border-radius:12px" onerror="this.remove()">
+    <h1 style="text-align:center">Panel de MRbikestore</h1>
+    <form id="pw" style="display:flex;flex-direction:column;gap:10px">
+      <input id="pw-pass" type="password" autocomplete="current-password" placeholder="Contraseña" required aria-label="Contraseña" autofocus>
+      <label class="chk"><input type="checkbox" id="pw-rem"> Recordar en este dispositivo</label>
+      ${err ? `<p class="err">${esc(err)}</p>` : ''}
+      <button class="btn primary big">Entrar</button>
+    </form>
+    <p class="hint">En una computadora o celular compartido, no marques “Recordar”: la sesión se cierra al cerrar el navegador.</p>
+    <button class="btn ghost" data-act="token-mode">Entrar con clave de GitHub</button>
+    <a class="btn ghost" href="./">Ver la página de clientes</a>
+  </div></div>`;
+  $('#pw').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const btn = ev.target.querySelector('button'); const pass = $('#pw-pass').value; const remember = $('#pw-rem').checked;
+    btn.disabled = true; btn.textContent = 'Verificando…';
+    let token;
+    try { token = await openToken(GH.access, pass); }
+    catch (e) { await new Promise(r => setTimeout(r, 1200)); renderPassLogin('Contraseña incorrecta.'); return; }
+    try { await connect(token); }
+    catch (e) { renderPassLogin(e.status === 401 ? 'La contraseña es correcta, pero la clave de GitHub guardada venció. Entrá con una clave nueva y volvé a configurar la contraseña.' : e.message); return; }
+    (remember ? ls : ss).set('token', token);
+    shell(); await reloadFromGitHub(true);
+  });
+}
+function renderOwner() {
+  const bar = $('#ownerbar'); if (!bar) return;
+  bar.hidden = !UI.owner;
+  if (!UI.owner) return;
+  if (UI.asClient) { bar.innerHTML = `<div class="wrap"><div class="who">Vista de cliente<small>Así se ve con los cambios de este panel</small></div><button class="btn solid" data-act="as-owner">Volver a editar</button></div>`; return; }
+  const when = D.actualizado ? new Date(D.actualizado).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }) : '';
+  bar.innerHTML = `<div class="wrap">
+    <div class="who">Panel${GH.login ? ' · ' + esc(GH.login) : ''}<small>${UI.dirty ? 'Tenés cambios sin publicar' : when ? 'Publicado ' + when : 'Sin publicar todavía'}</small></div>
+    <button class="btn" data-act="store">Datos de la tienda</button>
+    <button class="btn" data-act="stock-import">Stock desde Mostrador</button>
+    <button class="btn" data-act="as-client">Ver como cliente</button>
+    <button class="btn" data-act="new">+ Producto</button>
+    <button class="btn" data-act="access">Contraseña</button>
+    <button class="btn" data-act="logout">Salir</button>
+    <button class="btn solid" data-act="publish" ${UI.dirty && !UI.publishing ? '' : 'disabled'}>${UI.publishing ? 'Publicando…' : 'Publicar'}</button></div>`;
+}
+function renderHero() {
+  const t = D.tienda, h = $('#hero'); if (!h) return;
+  const showTitle = UI.noLogo ? '' : ' sr-only';
+  h.innerHTML = `${UI.noLogo ? '' : `<img class="logo" src="logo.jpg" alt="${esc(t.nombre || 'Logo')}" width="720" height="720">`}<h1 class="title${showTitle}">${esc(t.nombre || 'Catálogo')}</h1>${t.lema ? `<p>${esc(t.lema)}</p>` : ''}${t.entrega ? `<p>${esc(t.entrega)}</p>` : ''}`;
+  const img = h.querySelector('img.logo');
+  if (img) img.addEventListener('error', () => { UI.noLogo = true; renderHero(); }, { once: true });
+}
+function renderCats() {
+  const box = $('#cats'); if (!box) return;
+  const list = showOwner() ? D.productos : visible();
+  const cats = [...new Set(list.map(p => (p.categoria || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  if (UI.cat && !cats.includes(UI.cat)) UI.cat = '';
+  box.hidden = cats.length < 2;
+  box.innerHTML = [['', 'Todo'], ...cats.map(c => [c, c])].map(([v, l]) => `<button class="chip" data-act="cat" data-v="${esc(v)}" aria-pressed="${UI.cat === v}">${esc(l)}</button>`).join('');
+}
+function renderGrid() {
+  const g = $('#grid'); if (!g) return;
+  if (UI.loading) { g.innerHTML = '<div class="loading">Cargando catálogo…</div>'; return; }
+  if (UI.loadError) { g.innerHTML = `<div class="empty"><strong>No pudimos cargar el catálogo</strong><span>${MODE === 'admin' ? esc(UI.loadError) : 'Revisá tu conexión y recargá la página.'}</span><button class="btn" data-act="reload">Reintentar</button></div>`; return; }
+  const own = showOwner(), q = norm(UI.q);
+  if (own && !D.productos.length && GH.seed && !GH.dataSha) {
+    g.innerHTML = `<div class="empty"><strong>Primer uso</strong><span>Todavía no hay catálogo publicado en GitHub. Podés traer los ${GH.seed.productos?.length || 0} productos y los datos de la tienda que tenían en el panel anterior.</span><button class="btn primary" data-act="seed">Traer el catálogo anterior</button></div>`;
+    return;
+  }
+  const list = (own ? D.productos : visible())
+    .filter(p => (!UI.cat || (p.categoria || '').trim() === UI.cat) && (!q || norm(`${p.nombre} ${p.descripcion} ${p.categoria} ${cols(p).map(c => c.nombre).join(' ')}`).includes(q)))
+    .sort((a, b) => (hasStock(b) - hasStock(a)) || (a.categoria || '').localeCompare(b.categoria || '', 'es') || (a.nombre || '').localeCompare(b.nombre || '', 'es'));
+  if (!D.productos.length || (!own && !visible().length)) {
+    g.innerHTML = own ? `<div class="empty"><strong>Tu catálogo está vacío</strong><span>Tocá “+ Producto” para cargar el primero. Después tocá “Publicar” para que lo vean tus clientes.</span><button class="btn primary" data-act="new">+ Producto</button></div>`
+      : `<div class="empty"><strong>Estamos armando el catálogo</strong><span>Pronto vas a ver nuestros productos acá.</span></div>`;
+    return;
+  }
+  if (!list.length) { g.innerHTML = `<div class="empty"><strong>No encontramos eso</strong><span>Probá con otra palabra o elegí “Todo”.</span></div>`; return; }
+  g.innerHTML = `<div class="grid">${list.map(p => {
+    const q = UI.cart[p.id] || 0, ok = hasStock(p), off = p.visible === false;
+    const ctrl = own ? `<button class="btn sm" data-act="edit" data-id="${esc(p.id)}">Editar</button>`
+      : hasCols(p) ? `<button class="add" data-act="detail" data-id="${esc(p.id)}" aria-label="Elegir color de ${esc(p.nombre)}" ${ok ? '' : 'disabled'}>+</button>`
+      : q ? `<span class="qty"><button data-act="dec" data-id="${esc(p.id)}" aria-label="Quitar uno">−</button><span>${q}</span><button data-act="inc" data-id="${esc(p.id)}" aria-label="Sumar uno" ${q >= maxQty(p) ? 'disabled' : ''}>+</button></span>`
+      : `<button class="add" data-act="inc" data-id="${esc(p.id)}" aria-label="Agregar ${esc(p.nombre)}" ${ok ? '' : 'disabled'}>+</button>`;
+    return `<article class="card ${(!ok && !own) || off ? 'off' : ''}">
+      <button class="ph" data-act="${own ? 'edit' : 'detail'}" data-id="${esc(p.id)}" aria-label="Ver ${esc(p.nombre)}">${photo(p)}<span class="badge">${off ? '<span class="pill neutral">Oculto</span>' : stockPill(p)}</span></button>
+      <div class="body"><span class="n">${esc(p.nombre)}</span>
+        ${hasCols(p) ? dots(p) : ''}
+        ${own ? `<span class="hint">${totalStock(p) == null ? 'Stock sin controlar' : 'Stock: ' + totalStock(p)}${hasCols(p) ? ' · ' + cols(p).length + ' colores' : p.codigo ? ' · Cód. ' + esc(p.codigo) : ''}</span>` : ''}
+        ${!own && hasCols(p) && inCart(p.id) ? `<span class="hint">En tu pedido: ${inCart(p.id)}</span>` : ''}
+        <div class="row"><span class="tag">${money(p.precio)}</span>${ctrl}</div></div>
+    </article>`;
+  }).join('')}</div>`;
+}
+function renderCartBar() {
+  const bar = $('#cartbar'); if (!bar) return;
+  const n = cartCount();
+  bar.hidden = showOwner() || !n || !!UI.sheet;
+  if (!bar.hidden) bar.innerHTML = `<button class="btn primary" data-act="open-cart"><span>Ver pedido · ${n} ${n === 1 ? 'producto' : 'productos'}</span><span>${money(cartTotal())}</span></button>`;
+}
+
+/* ---------- Sheets ---------- */
+function openSheet(name, arg) { UI.sheet = name; UI.sheetArg = arg; renderSheet(); renderCartBar(); }
+function closeSheet() { UI.sheet = null; renderSheet(); renderCartBar(); }
+function renderSheet() {
+  const root = $('#sheet-root'); if (!root) return;
+  if (!UI.sheet) { root.innerHTML = ''; return; }
+  const body = SHEETS[UI.sheet]?.(UI.sheetArg);
+  if (body == null) { UI.sheet = null; root.innerHTML = ''; return; }
+  const keepScroll = root.querySelector('.sheet')?.scrollTop || 0;
+  root.innerHTML = `<div class="overlay" data-act="bg"><div class="sheet" role="dialog" aria-modal="true">${body}</div></div>`;
+  root.querySelector('.sheet').scrollTop = keepScroll;
+  SHEETS[UI.sheet + 'Bind']?.(UI.sheetArg);
+}
+const head = t => `<div class="sheet-head"><h2>${esc(t)}</h2><button class="x" data-act="close" aria-label="Cerrar">✕</button></div>`;
+const SHEETS = {
+  detail(id) {
+    const p = byId(id); if (!p) return null;
+    const cs = cols(p);
+    const desc = p.descripcion && norm(p.descripcion) !== norm(p.nombre) ? `<p style="margin:0;white-space:pre-line">${esc(p.descripcion)}</p>` : '';
+    if (cs.length) {
+      let c = colorOf(p, UI.pick); if (!c) c = cs.find(cHas) || cs[0]; UI.pick = c.id;
+      const key = keyOf(p.id, c.id), q = UI.cart[key] || 0, img = c.foto || p.foto;
+      return `${head(p.nombre)}
+      ${img ? `<img class="detail-img" src="${esc(imgSrc(img))}" alt="${esc(p.nombre + ' ' + c.nombre)}">` : ''}
+      ${desc}
+      <div class="total"><span class="tag" style="font-size:1.5rem">${money(p.precio)}</span>${stockPill(p, c)}</div>
+      <div><span class="label">Color: ${esc(c.nombre)}</span>
+        <div class="swatches" role="group" aria-label="Elegí un color">${cs.map(x => `<button class="sw" data-act="pick" data-v="${esc(x.id)}" aria-pressed="${x.id === c.id}" ${cHas(x) ? '' : 'disabled title="Sin stock"'}>${dot(x)}${esc(x.nombre)}</button>`).join('')}</div></div>
+      ${!hasStock(p) ? `<p class="hint">Por ahora no tenemos stock de este producto.</p>`
+        : cHas(c) ? `<button class="btn primary big" data-act="inc-close" data-id="${esc(key)}" ${q >= maxQty(p, c) ? 'disabled' : ''}>${q ? `Agregar otro ${esc(c.nombre)} (llevás ${q})` : `Agregar ${esc(c.nombre)} al pedido`}</button>`
+        : `<p class="hint">No tenemos stock de este color.</p>`}`;
+    }
+    const q = UI.cart[p.id] || 0;
+    return `${head(p.nombre)}
+      ${p.foto ? `<img class="detail-img" src="${esc(imgSrc(p.foto))}" alt="${esc(p.nombre)}">` : ''}
+      ${desc}
+      <div class="total"><span class="tag" style="font-size:1.5rem">${money(p.precio)}</span>${stockPill(p)}</div>
+      ${hasStock(p) ? `<button class="btn primary big" data-act="inc-close" data-id="${esc(p.id)}" ${q >= maxQty(p) ? 'disabled' : ''}>${q ? `Agregar otro (llevás ${q})` : 'Agregar al pedido'}</button>` : `<p class="hint">Por ahora no tenemos stock de este producto.</p>`}`;
+  },
+  cart() {
+    const lines = cartLines();
+    if (!lines.length) return `${head('Tu pedido')}<p class="hint">Todavía no agregaste productos.</p><button class="btn big" data-act="close">Ver productos</button>`;
+    return `${head('Tu pedido')}
+      <div>${lines.map(({ key, p, c, q }) => { const img = (c && c.foto) || p.foto; return `<div class="line"><div class="thumb">${img ? `<img src="${esc(imgSrc(img))}" alt="">` : ''}</div>
+        <div><div class="n">${esc(p.nombre)}</div>${c ? `<div class="u" style="display:flex;gap:6px;align-items:center">${dot(c)}${esc(c.nombre)}</div>` : ''}<div class="u">${money(p.precio)} c/u</div></div>
+        <div class="r"><strong>${money(num(p.precio) * q)}</strong><span class="qty"><button data-act="dec" data-id="${esc(key)}" aria-label="Quitar uno">−</button><span>${q}</span><button data-act="inc" data-id="${esc(key)}" aria-label="Sumar uno" ${q >= maxQty(p, c) ? 'disabled' : ''}>+</button></span></div></div>`; }).join('')}</div>
+      <div class="total"><span class="label">Total</span><strong>${money(cartTotal())}</strong></div>
+      ${payReady() ? `<button class="btn primary big" data-act="checkout">Continuar</button>` : `<div class="notice">La tienda todavía no cargó sus datos de pago. Volvé a intentar más tarde.</div>`}`;
+  },
+  checkout() {
+    const f = UI.form;
+    return `${head('Tus datos')}
+      <form id="co" class="formgrid">
+        <label class="f full">Nombre y apellido<input id="co-nombre" required value="${esc(f.nombre)}" autocomplete="name"></label>
+        <label class="f full">Tu WhatsApp (opcional)<input id="co-telefono" type="tel" value="${esc(f.telefono)}" autocomplete="tel"></label>
+        <label class="f full">¿Cómo lo recibís?<select id="co-entrega"><option value="retiro" ${f.entrega === 'retiro' ? 'selected' : ''}>Retiro en el local</option><option value="envio" ${f.entrega === 'envio' ? 'selected' : ''}>Envío a domicilio</option></select></label>
+        <label class="f full" id="co-dir-wrap" ${f.entrega === 'envio' ? '' : 'hidden'}>Dirección de entrega<textarea id="co-direccion">${esc(f.direccion)}</textarea></label>
+        <label class="f full">Nota (opcional)<input id="co-nota" value="${esc(f.nota)}" placeholder="Horario, aclaraciones…"></label>
+        <div class="full total"><span class="label">Total a transferir</span><strong>${money(cartTotal())}</strong></div>
+        <button class="btn primary big full">Confirmar pedido</button>
+        <button type="button" class="btn ghost full" data-act="open-cart">Volver al pedido</button>
+      </form>`;
+  },
+  checkoutBind() {
+    const sync = () => { UI.form = { nombre: $('#co-nombre').value, telefono: $('#co-telefono').value, entrega: $('#co-entrega').value, direccion: $('#co-direccion').value, nota: $('#co-nota').value }; persist(); };
+    $('#co').addEventListener('input', sync);
+    $('#co-entrega').addEventListener('change', () => { sync(); $('#co-dir-wrap').hidden = UI.form.entrega !== 'envio'; });
+    $('#co').addEventListener('submit', ev => {
+      ev.preventDefault(); sync();
+      if (UI.form.entrega === 'envio' && !UI.form.direccion.trim()) { $('#co-direccion').focus(); toast('Falta la dirección de entrega'); return; }
+      UI.order = { no: newOrderNo(), fecha: new Date().toISOString(), items: cartLines().map(({ p, c, q }) => ({ nombre: p.nombre, color: c ? c.nombre : '', codigo: (c && c.codigo) || p.codigo || '', q, precio: num(p.precio) })), total: cartTotal(), ...UI.form };
+      UI.cart = {}; persist(); renderGrid(); openSheet('order');
+    });
+  },
+  order() {
+    const o = UI.order, t = D.tienda; if (!o) return null;
+    const bank = [['Alias', t.alias], ['CBU / CVU', t.cbu], ['Titular', t.titular], ['Banco', t.banco]].filter(([, v]) => v);
+    return `${head('¡Pedido confirmado!')}
+      <div class="orderno"><span class="label" style="color:inherit">Tu número de pedido</span><b>${esc(o.no)}</b><span>Total a transferir: <strong>${money(o.total)}</strong></span></div>
+      <ol class="steps">
+        <li><div><strong>Transferí ${money(o.total)}</strong>
+          <div class="bank">${bank.map(([k, v]) => `<div><span>${k}</span><code>${esc(v)}</code><button class="btn sm" data-act="copy" data-v="${esc(v)}">Copiar</button></div>`).join('')}</div>
+          <p class="hint">Si podés, poné <strong>${esc(o.no)}</strong> en el concepto o la referencia de la transferencia.</p></div></li>
+        <li><div><strong>Mandanos el comprobante por WhatsApp</strong>
+          <a class="btn wa big" href="${esc(waLink(o))}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
+          <p class="hint">Se abre WhatsApp con tu pedido ya escrito. Adjuntá la captura del comprobante antes de enviar. Si no se abre, escribinos al <strong style="user-select:all">+${esc(waDigits())}</strong> con tu número de pedido.</p>
+          <button class="btn sm" data-act="copy-msg">Copiar el mensaje</button></div></li>
+        <li><div><strong>Listo</strong><p class="hint">Confirmamos tu pedido cuando recibimos el comprobante.</p></div></li>
+      </ol>
+      <div><span class="label">Detalle</span>${o.items.map(i => `<div class="total" style="font-size:.95rem"><span>${i.q}× ${esc(i.nombre)}${i.color ? ' · ' + esc(i.color) : ''}</span><span>${money(i.q * i.precio)}</span></div>`).join('')}</div>
+      <button class="btn ghost" data-act="new-order">Hacer otro pedido</button>`;
+  },
+  conflict() {
+    return `${head('Alguien publicó antes')}
+      <p>Mientras editabas, otra persona publicó cambios en el catálogo. Para no pisarlos, no se publicó nada.</p>
+      <p class="hint">Tus cambios quedaron guardados en este dispositivo. Opciones:</p>
+      <button class="btn primary big" data-act="reload-discard">Ver lo publicado (descarta mis cambios)</button>
+      <button class="btn big" data-act="close">Seguir editando</button>
+      <p class="hint">Si tus cambios eran pocos, conviene ver lo publicado y volver a hacerlos encima.</p>`;
+  },
+  access() {
+    return `${head('Acceso con contraseña')}
+      <p class="hint">${GH.access ? 'Ya hay una contraseña configurada. Acá podés cambiarla.' : 'Configurá una contraseña para entrar al panel desde cualquier dispositivo sin pegar la clave de GitHub.'}</p>
+      <div class="notice">Mínimo 12 caracteres y que no la uses en otro lado. Quien la sepa puede cambiar precios y el alias de cobro. Una frase de 3 o 4 palabras sueltas es fácil de recordar y difícil de adivinar.</div>
+      <form id="ac" class="formgrid">
+        <label class="f full">Contraseña nueva<input id="ac-1" type="password" autocomplete="new-password" required></label>
+        <label class="f full">Repetila<input id="ac-2" type="password" autocomplete="new-password" required></label>
+        <p class="err full" id="ac-err"></p>
+        <button class="btn primary big full">Guardar contraseña</button>
+      </form>
+      ${GH.access ? '<button class="btn ghost danger" data-act="access-del">Quitar el acceso por contraseña</button>' : ''}
+      <p class="hint">Si cambiás la contraseña, la anterior deja de funcionar en 1 o 2 minutos. Los dispositivos que ya entraron siguen conectados hasta que toquen “Salir”.</p>`;
+  },
+  accessBind() {
+    $('#ac').addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const a = $('#ac-1').value, b = $('#ac-2').value, err = $('#ac-err');
+      if (a.length < 12) { err.textContent = 'Tiene que tener al menos 12 caracteres.'; return; }
+      if (new Set(a).size < 5) { err.textContent = 'Es demasiado fácil de adivinar. Usá caracteres más variados.'; return; }
+      if (a !== b) { err.textContent = 'Las dos contraseñas no coinciden.'; return; }
+      const btn = ev.target.querySelector('button'); btn.disabled = true; btn.textContent = 'Guardando…';
+      try {
+        const box = await sealToken(GH.token, a);
+        const cur = await gh('GET', `/contents/acceso.json?ref=${BRANCH}`, null, { allow404: true });
+        await gh('PUT', '/contents/acceso.json', { message: GH.access ? 'Cambio de contraseña del panel' : 'Acceso por contraseña al panel', content: btoa(JSON.stringify(box) + '\n'), branch: BRANCH, ...(cur ? { sha: cur.sha } : {}) });
+        GH.access = box; closeSheet(); toast('Contraseña guardada. Funciona en otros dispositivos en 1 o 2 minutos');
+      } catch (e) { console.error(e); err.textContent = e.message || 'No se pudo guardar.'; btn.disabled = false; btn.textContent = 'Guardar contraseña'; }
+    });
+  },
+  store() {
+    const t = D.tienda;
+    const fld = (k, l, ph = '', type = 'text', full = true) => `<label class="f ${full ? 'full' : ''}">${l}<input id="st-${k}" type="${type}" value="${esc(t[k])}" placeholder="${esc(ph)}"></label>`;
+    return `${head('Datos de la tienda')}
+      <form id="st" class="formgrid">
+        ${fld('nombre', 'Nombre de la tienda', 'Ej.: MRbikestore')}
+        ${fld('lema', 'Frase corta (opcional)', 'Ej.: Repuestos y accesorios para bici')}
+        ${fld('entrega', 'Entregas y retiro (opcional)', 'Ej.: Retiro de lunes a sábado 9 a 20 h.')}
+        ${fld('whatsapp', 'WhatsApp para comprobantes', 'Ej.: 385 443-8360', 'tel')}
+        <p class="hint full" style="margin-top:-6px">Código de área + número, sin 0 ni 15. El 549 de Argentina se agrega solo.</p>
+        ${fld('alias', 'Alias', 'mi.tienda.mp', 'text', false)}${fld('cbu', 'CBU / CVU', '', 'text', false)}
+        ${fld('titular', 'Titular de la cuenta', '', 'text', false)}${fld('banco', 'Banco o billetera', 'Mercado Pago, Galicia…', 'text', false)}
+        <button class="btn primary big full">Guardar</button>
+      </form>`;
+  },
+  storeBind() {
+    $('#st').addEventListener('submit', ev => {
+      ev.preventDefault();
+      for (const k of Object.keys(blankStore)) D.tienda[k] = $('#st-' + k).value.trim();
+      if (D.tienda.whatsapp) D.tienda.whatsapp = normWa(D.tienda.whatsapp);
+      markDirty(); closeSheet(); toast('Guardado. Tocá “Publicar” para que lo vean tus clientes');
+    });
+  },
+  prod(id) {
+    const p = id ? byId(id) : { nombre: '', descripcion: '', categoria: '', precio: '', stock: '', codigo: '', foto: '', visible: true };
+    if (!p) return null;
+    UI.photoDraft = UI.photoDraft === undefined ? p.foto : UI.photoDraft;
+    if (UI.colorDraft === undefined) UI.colorDraft = cols(p).map(c => ({ ...c, _manual: true }));
+    const CD = UI.colorDraft;
+    const cats = [...new Set(D.productos.map(x => x.categoria).filter(Boolean))];
+    return `${head(id ? 'Editar producto' : 'Nuevo producto')}
+      <form id="pf" class="formgrid">
+        <div class="full photo-edit"><div class="ph" id="pf-prev">${UI.photoDraft ? `<img src="${esc(imgSrc(UI.photoDraft))}" alt="">` : '<span class="ini">+</span>'}</div>
+          <div style="display:flex;flex-direction:column;gap:6px"><label class="btn" for="pf-file">${UI.photoDraft ? 'Cambiar foto' : 'Subir foto'}</label>
+          <input id="pf-file" type="file" accept="image/*" hidden>${UI.photoDraft ? '<button type="button" class="btn sm ghost danger" data-act="photo-del">Quitar foto</button>' : ''}<span class="hint" id="pf-msg"></span></div></div>
+        <label class="f full">Nombre<input id="pf-nombre" required value="${esc(p.nombre)}"></label>
+        <label class="f full">Descripción (opcional)<textarea id="pf-descripcion" placeholder="Medidas, material, compatibilidad…">${esc(p.descripcion)}</textarea></label>
+        <label class="f">Categoría<input id="pf-categoria" value="${esc(p.categoria)}" list="pf-cats"><datalist id="pf-cats">${cats.map(c => `<option value="${esc(c)}">`).join('')}</datalist></label>
+        <label class="f">Precio<input id="pf-precio" type="number" min="0" step="0.01" required value="${esc(p.precio)}"></label>
+        ${CD.length ? '' : `<label class="f">Stock<input id="pf-stock" type="number" min="0" step="1" value="${esc(p.stock ?? '')}" placeholder="Vacío = sin controlar"></label>
+        <label class="f">Código en Mostrador<input id="pf-codigo" value="${esc(p.codigo)}" placeholder="Para actualizar el stock"></label>`}
+        <div class="full" style="display:flex;flex-direction:column;gap:8px">
+          <span class="label">Colores (opcional)</span>
+          <p class="hint">${CD.length ? 'El cliente elige uno al comprar. El stock y el código de Mostrador van en cada color; stock vacío = sin controlar.' : 'Si el producto viene en varios colores, agregalos acá. El cliente va a elegir el color al comprar.'}</p>
+          ${CD.map((c, i) => `<div class="colrow">
+            <input type="color" data-ci="${i}" data-k="hex" value="${hex(c.hex)}" aria-label="Tono del color">
+            <input data-ci="${i}" data-k="nombre" value="${esc(c.nombre)}" placeholder="Ej.: Rojo" aria-label="Nombre del color">
+            <input data-ci="${i}" data-k="stock" type="number" min="0" step="1" value="${esc(c.stock ?? '')}" placeholder="Stock" aria-label="Stock de este color">
+            <button type="button" class="x" data-act="col-del" data-v="${i}" aria-label="Quitar color">✕</button>
+            <input class="cod" data-ci="${i}" data-k="codigo" value="${esc(c.codigo || '')}" placeholder="Código en Mostrador" aria-label="Código en Mostrador">
+            <div class="cfoto"><div class="cph">${c.foto ? `<img src="${esc(imgSrc(c.foto))}" alt="">` : ''}</div>
+              ${c.foto ? `<button type="button" class="btn sm ghost danger" data-act="col-foto-del" data-v="${i}" aria-label="Quitar foto del color">✕</button>` : ''}
+              <label class="btn sm" for="pf-cf-${i}">${c.foto ? 'Cambiar' : 'Foto'}</label><input type="file" id="pf-cf-${i}" data-cf="${i}" accept="image/*" hidden></div>
+          </div>`).join('')}
+          <button type="button" class="btn" data-act="col-add">+ Color</button>
+        </div>
+        <label class="chk full"><input type="checkbox" id="pf-visible" ${p.visible !== false ? 'checked' : ''}> Mostrar en el catálogo</label>
+        <button class="btn primary big full">${id ? 'Guardar' : 'Agregar producto'}</button>
+        ${id ? `<button type="button" class="btn ghost danger full" data-act="del" data-id="${esc(id)}">Borrar producto</button>` : ''}
+      </form>`;
+  },
+  prodBind(id) {
+    $('#pf-file').addEventListener('change', async ev => {
+      const f = ev.target.files[0]; if (!f) return;
+      $('#pf-msg').textContent = 'Preparando foto…';
+      try { UI.photoDraft = await shrink(f); keepForm(); renderSheet(); }
+      catch (e) { $('#pf-msg').textContent = 'No se pudo leer esa imagen. Probá con una foto JPG o PNG.'; }
+    });
+    $('#pf').addEventListener('input', ev => {
+      const t = ev.target, i = t.dataset.ci; if (i == null) return;
+      const c = UI.colorDraft[+i]; if (!c) return;
+      c[t.dataset.k] = t.value;
+      if (t.dataset.k === 'hex') c._manual = true;
+      if (t.dataset.k === 'nombre' && !c._manual) { const g = guessHex(t.value); if (g) { c.hex = g; const h = $(`#pf [data-ci="${i}"][data-k="hex"]`); if (h) h.value = g; } }
+    });
+    $('#pf').addEventListener('change', async ev => {
+      const t = ev.target, i = t.dataset.cf; if (i == null) return;
+      const f = t.files[0]; if (!f) return;
+      try { const img = await shrink(f); UI.colorDraft[+i].foto = img; keepForm(); renderSheet(); }
+      catch (e) { toast('No se pudo leer esa imagen. Probá con una foto JPG o PNG.'); }
+    });
+    $('#pf').addEventListener('submit', ev => {
+      ev.preventDefault();
+      if (UI.colorDraft.some(c => !String(c.nombre || '').trim())) { toast('Ponele nombre a cada color o quitalo'); return; }
+      const v = readProdForm();
+      if (id) Object.assign(byId(id), v);
+      else D.productos.push({ id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...v });
+      UI.photoDraft = undefined; UI.colorDraft = undefined; UI.prodForm = null; markDirty(); closeSheet();
+      toast(id ? 'Producto actualizado. Acordate de publicar' : 'Producto agregado. Acordate de publicar');
+    });
+    if (UI.prodForm) { for (const [k, val] of Object.entries(UI.prodForm)) { const el = $('#pf-' + k); if (el) el.type === 'checkbox' ? (el.checked = val) : (el.value = val); } UI.prodForm = null; }
+  },
+  stockImport(res) {
+    if (!res) return `${head('Stock desde Mostrador')}
+      <p class="hint">En Mostrador tocá <strong>Exportar a Excel</strong> y subí ese archivo acá. Se actualiza el stock de los productos del catálogo que coincidan por código o por nombre. En los productos con colores, cada color se busca por su propio código (o por “Producto Color”). Fotos, precios y descripciones no se tocan.</p>
+      <label class="btn primary big" for="si-file">Elegir archivo de Mostrador</label><input id="si-file" type="file" accept=".xlsx,.xls,.csv" hidden><p class="hint" id="si-msg"></p>`;
+    return `${head('Stock actualizado')}
+      <p>Se actualizó el stock de <strong>${res.ok}</strong> ${res.ok === 1 ? 'artículo' : 'artículos'}.${res.agotados ? ` ${res.agotados} ${res.agotados === 1 ? 'quedó' : 'quedaron'} sin stock.` : ''}</p>
+      ${res.sin.length ? `<p class="hint">Sin coincidencia en Mostrador (no se tocaron): ${esc(res.sin.join(', '))}. Cargales el mismo código o nombre que en Mostrador.</p>` : ''}
+      <button class="btn primary big" data-act="publish">Publicar</button>`;
+  },
+  stockImportBind(res) {
+    if (res) return;
+    $('#si-file').addEventListener('change', async ev => {
+      const f = ev.target.files[0]; if (!f) return;
+      $('#si-msg').textContent = 'Leyendo archivo…';
+      try { openSheet('stockImport', await importStock(f)); }
+      catch (e) { console.error(e); $('#si-msg').textContent = e.message || 'No se pudo leer el archivo.'; }
+    });
+  },
+};
+function readProdForm() {
+  const sv = $('#pf-stock')?.value.trim() ?? '';
+  const colores = (UI.colorDraft || []).map(c => ({ id: c.id, nombre: String(c.nombre || '').trim(), hex: hex(c.hex),
+    stock: String(c.stock ?? '').trim() === '' ? null : Math.max(0, Math.round(num(c.stock))), codigo: String(c.codigo || '').trim(), foto: c.foto || '' })).filter(c => c.nombre);
+  const old = UI.sheetArg ? byId(UI.sheetArg) : null;
+  return { nombre: $('#pf-nombre').value.trim(), descripcion: $('#pf-descripcion').value.trim(), categoria: $('#pf-categoria').value.trim(),
+    precio: num($('#pf-precio').value), stock: colores.length || sv === '' ? null : Math.max(0, Math.round(num(sv))),
+    codigo: $('#pf-codigo') ? $('#pf-codigo').value.trim() : (old?.codigo || ''), colores,
+    visible: $('#pf-visible').checked, foto: UI.photoDraft || '' };
+}
+function keepForm() {
+  UI.prodForm = {};
+  for (const k of ['nombre', 'descripcion', 'categoria', 'precio', 'stock', 'codigo']) { const el = $('#pf-' + k); if (el) UI.prodForm[k] = el.value; }
+  UI.prodForm.visible = $('#pf-visible').checked;
+}
+function waLink(o) {
+  const lines = [`¡Hola! Hice el pedido N° ${o.no} en ${D.tienda.nombre || 'el catálogo'}.`, '',
+    ...o.items.map(i => `• ${i.q}× ${i.nombre}${i.color ? ` (${i.color})` : ''}${i.codigo ? ` [${i.codigo}]` : ''} — ${money(i.q * i.precio)}`), '', `Total: ${money(o.total)}`, '',
+    `Nombre: ${o.nombre}`, ...(o.telefono ? [`Teléfono: ${o.telefono}`] : []),
+    o.entrega === 'envio' ? `Envío a: ${o.direccion}` : 'Retiro en el local', ...(o.nota ? [`Nota: ${o.nota}`] : []), '',
+    'Te adjunto el comprobante de la transferencia.'];
+  UI.waText = lines.join('\n');
+  return `https://wa.me/${waDigits()}?text=${encodeURIComponent(UI.waText)}`;
+}
+
+/* ---------- Owner tools ---------- */
+function markDirty() { UI.dirty = true; saveDraft(); render(); }
+function shrink(file, max = 900, q = 0.8) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', q));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('bad image')); };
+    img.src = url;
+  });
+}
+function loadXLSX() {
+  if (window.XLSX) return Promise.resolve();
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = XLSX_URL; s.onload = res; s.onerror = () => rej(new Error('No se pudo cargar el lector de Excel. Revisá la conexión.')); document.head.appendChild(s); });
+}
+async function importStock(file) {
+  await loadXLSX();
+  const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames.find(n => norm(n) === 'productos') || wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+  if (!rows.length) throw new Error('El archivo no tiene filas.');
+  const keys = Object.keys(rows[0]), find = names => keys.find(k => names.includes(norm(k)));
+  const kN = find(['producto', 'nombre', 'descripcion', 'articulo']), kC = find(['codigo', 'cod', 'cod.', 'sku']), kS = find(['stock', 'cantidad', 'existencia']);
+  if (!kN || !kS) throw new Error('No encontré las columnas “Producto” y “Stock”. Usá el archivo de Exportar a Excel de Mostrador.');
+  const byCode = new Map(), byName = new Map();
+  for (const r of rows) { const s = Math.max(0, Math.round(num(r[kS]))); if (kC && String(r[kC]).trim()) byCode.set(norm(r[kC]), s); byName.set(norm(r[kN]), s); }
+  const res = { ok: 0, agotados: 0, sin: [] };
+  for (const p of D.productos) {
+    if (hasCols(p)) {
+      for (const c of cols(p)) {
+        const s = (c.codigo && byCode.has(norm(c.codigo))) ? byCode.get(norm(c.codigo)) : (byName.get(norm(p.nombre + ' ' + c.nombre)) ?? byName.get(norm(p.nombre + ' - ' + c.nombre)));
+        if (s == null) { res.sin.push(`${p.nombre} (${c.nombre})`); continue; }
+        c.stock = s; res.ok++; if (s <= 0) res.agotados++;
+      }
+      continue;
+    }
+    const s = (p.codigo && byCode.has(norm(p.codigo))) ? byCode.get(norm(p.codigo)) : byName.get(norm(p.nombre));
+    if (s == null) { res.sin.push(p.nombre); continue; }
+    p.stock = s; res.ok++; if (s <= 0) res.agotados++;
+  }
+  if (res.ok) markDirty();
+  return res;
+}
+
+/* ---------- Events ---------- */
+document.addEventListener('click', async ev => {
+  const el = ev.target.closest('[data-act]'); if (!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  if (act === 'bg' && ev.target !== el) return;
+  switch (act) {
+    case 'bg': case 'close': UI.photoDraft = undefined; UI.colorDraft = undefined; UI.prodForm = null; closeSheet(); break;
+    case 'cat': UI.cat = el.dataset.v; renderCats(); renderGrid(); break;
+    case 'inc': setQty(id, (UI.cart[id] || 0) + 1); break;
+    case 'dec': setQty(id, (UI.cart[id] || 0) - 1); break;
+    case 'inc-close': setQty(id, (UI.cart[id] || 0) + 1); closeSheet(); toast('Agregado al pedido'); break;
+    case 'detail': UI.pick = null; openSheet('detail', id); break;
+    case 'pick': UI.pick = el.dataset.v; renderSheet(); break;
+    case 'open-cart': openSheet('cart'); break;
+    case 'checkout': openSheet('checkout'); break;
+    case 'copy': copy(el.dataset.v, el); break;
+    case 'copy-msg': if (UI.order) { waLink(UI.order); copy(UI.waText, el); } break;
+    case 'new-order': UI.order = null; persist(); closeSheet(); break;
+    case 'reload': if (MODE === 'admin') reloadFromGitHub(true); else clientLoad(); break;
+    /* owner */
+    case 'store': openSheet('store'); break;
+    case 'new': UI.photoDraft = undefined; UI.colorDraft = undefined; openSheet('prod', null); break;
+    case 'edit': UI.photoDraft = undefined; UI.colorDraft = undefined; openSheet('prod', id); break;
+    case 'photo-del': keepForm(); UI.photoDraft = ''; renderSheet(); break;
+    case 'col-add': { keepForm(); const n = (UI.colorDraft ||= []).push({ id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), nombre: '', hex: '#888888', stock: '', codigo: '', foto: '' }); renderSheet(); $(`#pf [data-ci="${n - 1}"][data-k="nombre"]`)?.focus(); break; }
+    case 'col-del': keepForm(); UI.colorDraft.splice(+el.dataset.v, 1); renderSheet(); break;
+    case 'col-foto-del': keepForm(); UI.colorDraft[+el.dataset.v].foto = ''; renderSheet(); break;
+    case 'del': if (armed(el)) { D.productos = D.productos.filter(p => p.id !== id); for (const k of Object.keys(UI.cart)) if (splitKey(k)[0] === id) delete UI.cart[k]; UI.photoDraft = undefined; UI.colorDraft = undefined; closeSheet(); markDirty(); toast('Producto borrado. Acordate de publicar'); } break;
+    case 'stock-import': openSheet('stockImport', null); break;
+    case 'as-client': UI.asClient = true; render(); break;
+    case 'as-owner': UI.asClient = false; render(); break;
+    case 'publish': closeSheet(); await publish(el); break;
+    case 'seed': if (GH.seed) { setData(GH.seed); markDirty(); toast('Catálogo traído. Revisalo y tocá “Publicar”'); } break;
+    case 'reload-discard': closeSheet(); ls.set('draft', null); await reloadFromGitHub(false); break;
+    case 'logout': if (UI.dirty && !armed(el)) break; forgetToken(); UI.owner = false; UI.tokenMode = false; renderLogin(); break;
+    case 'access': openSheet('access'); break;
+    case 'access-del': if (armed(el)) { try { const cur = await gh('GET', `/contents/acceso.json?ref=${BRANCH}`, null, { allow404: true }); if (cur) await gh('DELETE', '/contents/acceso.json', { message: 'Quitar acceso por contraseña', sha: cur.sha, branch: BRANCH }); GH.access = null; closeSheet(); toast('Acceso por contraseña quitado'); } catch (e) { toast(e.message); } } break;
+    case 'token-mode': UI.tokenMode = true; renderLogin(); break;
+    case 'pass-mode': UI.tokenMode = false; renderLogin(); break;
+  }
+});
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && UI.sheet) closeSheet(); });
+window.addEventListener('beforeunload', ev => { if (MODE === 'admin' && UI.dirty) { ev.preventDefault(); ev.returnValue = ''; } });
+
+/* ---------- Boot ---------- */
+async function clientLoad() {
+  UI.loading = true; UI.loadError = false; render();
+  try {
+    const r = await fetch('data.json?v=' + Date.now(), { cache: 'no-store' });
+    if (r.status === 404) setData({});
+    else if (!r.ok) throw new Error('HTTP ' + r.status);
+    else setData(await r.json());
+  } catch (e) { console.error(e); UI.loadError = true; }
+  UI.loading = false;
+  if (UI.order && !UI.sheet) UI.sheet = 'order';
+  render();
+}
+if (MODE === 'admin') { shell(); render(); adminBoot(); }
+else { shell(); clientLoad(); }
+})();
+</script>
+</body>
+</html>
